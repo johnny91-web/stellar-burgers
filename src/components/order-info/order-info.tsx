@@ -1,53 +1,72 @@
-import { FC, useMemo } from 'react';
+// src/components/order-info/order-info.tsx
+import { FC, useMemo, useEffect } from 'react';
 import { Preloader } from '../ui/preloader';
 import { OrderInfoUI } from '../ui/order-info';
 import { TIngredient } from '@utils-types';
+import { useParams } from 'react-router-dom';
+import { useDispatch, useSelector } from '../../services/store';
+import {
+  getOrderByNumber,
+  selectOrderData,
+  selectOrderIsRequested,
+  selectOrderError
+} from '../../services/slices/orderListUserSlice';
+import { selectIngredients } from '../../services/slices/ingredientsSlice';
 
 export const OrderInfo: FC = () => {
-  /** TODO: взять переменные orderData и ingredients из стора */
-  const orderData = {
-    createdAt: '',
-    ingredients: [],
-    _id: '',
-    status: '',
-    name: '',
-    updatedAt: 'string',
-    number: 0
-  };
+  const { number, id } = useParams();
+  const dispatch = useDispatch();
 
-  const ingredients: TIngredient[] = [];
+  const orderData = useSelector(selectOrderData);
+  const ingredients = useSelector(selectIngredients) as TIngredient[];
+  const isRequested = useSelector(selectOrderIsRequested);
+  const error = useSelector(selectOrderError);
 
-  /* Готовим данные для отображения */
+  const orderNumber = Number(number ?? id);
+
+  useEffect(() => {
+    if (Number.isInteger(orderNumber) && orderNumber > 0) {
+      dispatch(getOrderByNumber(orderNumber));
+    }
+  }, [dispatch, orderNumber]);
+
   const orderInfo = useMemo(() => {
-    if (!orderData || !ingredients.length) return null;
+    // Если заказа нет вообще — ждём
+    if (!orderData) return null;
 
-    const date = new Date(orderData.createdAt);
+    // Дата: безопасная инициализация
+    let date: Date;
+    try {
+      date = new Date(orderData.createdAt || Date.now());
+      if (isNaN(date.getTime())) date = new Date();
+    } catch {
+      date = new Date();
+    }
 
     type TIngredientsWithCount = {
       [key: string]: TIngredient & { count: number };
     };
 
-    const ingredientsInfo = orderData.ingredients.reduce(
-      (acc: TIngredientsWithCount, item) => {
-        if (!acc[item]) {
-          const ingredient = ingredients.find((ing) => ing._id === item);
-          if (ingredient) {
-            acc[item] = {
-              ...ingredient,
-              count: 1
-            };
-          }
-        } else {
-          acc[item].count++;
-        }
+    const ingredientsInfo: TIngredientsWithCount = {};
+    const ingredientIds = orderData.ingredients || [];
 
-        return acc;
-      },
-      {}
-    );
+    ingredientIds.forEach((ingredientId) => {
+      const ingredient = ingredients?.find((ing) => ing._id === ingredientId);
+      // Если ингредиента нет в списке — просто пропускаем, не ломаем весь заказ
+      if (!ingredient) return;
+
+      if (ingredientsInfo[ingredientId]) {
+        ingredientsInfo[ingredientId].count++;
+      } else {
+        ingredientsInfo[ingredientId] = {
+          ...ingredient,
+          count: 1
+        };
+      }
+    });
 
     const total = Object.values(ingredientsInfo).reduce(
-      (acc, item) => acc + item.price * item.count,
+      (acc, item) => acc + (item.price ?? 0) * (item.count ?? 0),
       0
     );
 
@@ -59,6 +78,22 @@ export const OrderInfo: FC = () => {
     };
   }, [orderData, ingredients]);
 
+  // Проверка номера
+  if (!Number.isInteger(orderNumber) || orderNumber <= 0) {
+    return <div>Некорректный номер заказа</div>;
+  }
+
+  // Пока грузится сам заказ — показываем прелоадер
+  if (isRequested) {
+    return <Preloader />;
+  }
+
+  // Если была ошибка — показываем её
+  if (error) {
+    return <div>{error}</div>;
+  }
+
+  // Если заказ есть, но данные ещё не сформировались (редкий кейс) — прелоадер
   if (!orderInfo) {
     return <Preloader />;
   }
