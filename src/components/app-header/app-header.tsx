@@ -1,9 +1,12 @@
 import { FC } from 'react';
-import { useSelector } from '../../services/store'; // подставь свой путь к store
-import { selectCurrentUser } from '../../services/slices/userSlice'; // подставь путь к слайсу
+import { useSelector } from '../../services/store';
+import { selectCurrentUser } from '../../services/slices/userSlice';
 import { AppHeaderUI } from '@ui';
 
 export const AppHeader: FC = () => {
   const user = useSelector(selectCurrentUser);
-  return <AppHeaderUI userName={user?.name ?? ''} />;
+  const profilePath = user ? '/profile' : '/login';
+  const displayName = user?.name ?? 'Личный кабинет';
+
+  return <AppHeaderUI userName={displayName} profilePath={profilePath} />;
 };

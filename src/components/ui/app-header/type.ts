@@ -1,3 +1,4 @@
-export type TAppHeaderUIProps = {
-  userName: string | undefined;
-};
+export interface TAppHeaderUIProps {
+  userName: string;
+  profilePath: string;
+}

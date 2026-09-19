@@ -1,12 +1,12 @@
 import { FC, SyntheticEvent, useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from '../../services/store';
 
 import { ProfileUI } from '@ui-pages';
-// Подставь правильный путь к селектору текущего пользователя
 import { selectCurrentUser } from '../../services/slices/userSlice';
+import { updateUser } from '../../services/slices/userSlice';
 
 export const Profile: FC = () => {
-  // Получаем данные текущего пользователя из стора
+  const dispatch = useDispatch();
   const user = useSelector(selectCurrentUser);
 
   const [formValue, setFormValue] = useState({
@@ -15,7 +15,6 @@ export const Profile: FC = () => {
     password: ''
   });
 
-  // Синхронизируем форму с данными пользователя, если они обновились (например, после рефреша или мутации)
   useEffect(() => {
     if (user) {
       setFormValue((prevState) => ({
@@ -31,10 +30,22 @@ export const Profile: FC = () => {
     formValue.email !== user?.email ||
     !!formValue.password;
 
-  const handleSubmit = (e: SyntheticEvent) => {
+  const handleSubmit = async (e: SyntheticEvent) => {
     e.preventDefault();
-    // TODO: здесь будет dispatch(updateUser(...)) с formValue
-    console.log('Отправляем обновление профиля:', formValue);
+
+    // Собираем только изменённые поля
+    const updates: { name?: string; email?: string; password?: string } = {};
+    if (formValue.name !== user?.name) updates.name = formValue.name;
+    if (formValue.email !== user?.email) updates.email = formValue.email;
+    if (formValue.password) updates.password = formValue.password;
+
+    try {
+      await dispatch(updateUser(updates)).unwrap();
+      // Очищаем поле пароля после успешного сохранения
+      setFormValue((prevState) => ({ ...prevState, password: '' }));
+    } catch (err) {
+      console.error('Ошибка обновления профиля:', err);
+    }
   };
 
   const handleCancel = (e: SyntheticEvent) => {
