@@ -5,8 +5,7 @@ import { AppHeaderUI } from '@ui';
 
 export const AppHeader: FC = () => {
   const user = useSelector(selectCurrentUser);
-  const profilePath = user ? '/profile' : '/login';
   const displayName = user?.name ?? 'Личный кабинет';
 
-  return <AppHeaderUI userName={displayName} profilePath={profilePath} />;
+  return <AppHeaderUI userName={displayName} />;
 };

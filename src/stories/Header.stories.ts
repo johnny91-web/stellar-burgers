@@ -15,14 +15,12 @@ type Story = StoryObj<typeof meta>;
 
 export const LoggedIn: Story = {
   args: {
-    userName: 'John Doe',
-    profilePath: '/profile'
+    userName: 'John Doe'
   }
 };
 
 export const LoggedOut: Story = {
   args: {
-    userName: 'Личный кабинет',
-    profilePath: '/login'
+    userName: 'Личный кабинет'
   }
 };

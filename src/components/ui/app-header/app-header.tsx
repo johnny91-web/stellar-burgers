@@ -9,10 +9,7 @@ import {
   ProfileIcon
 } from '@zlden/react-developer-burger-ui-components';
 
-export const AppHeaderUI: FC<TAppHeaderUIProps> = ({
-  userName,
-  profilePath
-}) => (
+export const AppHeaderUI: FC<TAppHeaderUIProps> = ({ userName }) => (
   <header className={styles.header}>
     <nav className={`${styles.menu} p-4`}>
       <div className={styles.menu_part_left}>
@@ -54,7 +51,7 @@ export const AppHeaderUI: FC<TAppHeaderUIProps> = ({
       </div>
 
       <NavLink
-        to={profilePath}
+        to='/profile'
         className={({ isActive }) =>
           `${styles.link_position_last} ${styles.link} ${isActive ? styles.link_active : ''}`
         }

@@ -16,7 +16,6 @@ export const Login: FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const loading = useSelector(selectUserLoading);
   const error = useSelector(selectUserError);
 
   const handleSubmit = (e: SyntheticEvent) => {
@@ -24,7 +23,7 @@ export const Login: FC = () => {
     dispatch(loginUser({ email, password }))
       .unwrap()
       .then(() => {
-        const from = (location.state as { from?: string })?.from || '/';
+        const from = location.state?.from?.pathname || '/';
         navigate(from, { replace: true });
       })
       .catch(() => {});
